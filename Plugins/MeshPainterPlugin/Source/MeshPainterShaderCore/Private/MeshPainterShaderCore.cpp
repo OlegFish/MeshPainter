@@ -5,8 +5,8 @@
 
 void FMeshPainterShaderCoreModule::StartupModule()
 {
-	//FString PluginShaderDir = FPaths::Combine(IPluginManager::Get().FindPlugin(TEXT("MeshPainterPlugin"))->GetBaseDir(), TEXT("Shaders"));
-	//AddShaderSourceDirectoryMapping(TEXT("/Plugin/MeshPainterPlugin"), PluginShaderDir);
+	FString PluginShaderDir = FPaths::Combine(IPluginManager::Get().FindPlugin(TEXT("MeshPainterPlugin"))->GetBaseDir(), TEXT("Shaders"));
+	AddShaderSourceDirectoryMapping(TEXT("/Plugin/MeshPainterPlugin"), PluginShaderDir);
 }
 
 void FMeshPainterShaderCoreModule::ShutdownModule()

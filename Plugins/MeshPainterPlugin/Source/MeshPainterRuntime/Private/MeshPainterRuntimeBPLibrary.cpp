@@ -4,7 +4,6 @@
 UMeshPainterRuntimeBPLibrary::UMeshPainterRuntimeBPLibrary(const FObjectInitializer& ObjectInitializer)
 : Super(ObjectInitializer)
 {
-
 }
 
 float UMeshPainterRuntimeBPLibrary::MeshPainterRuntimeSampleFunction(float Param)
