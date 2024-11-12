@@ -1,0 +1,22 @@
+#include "Common.ush"
+
+#define NUM_THREADS 1
+
+[numthreads(NUM_THREADS_X, NUM_THREADS_Y, 1)]
+void ColorFillCS(uint3 ThreadId : SV_DispatchThreadID)
+{
+}
+
+#if VERTEXSHADER
+void ColorFillVS()
+{
+	
+}
+#endif
+
+#if PIXELSHADER
+void ColorFillPS(out float3 Color)
+{
+	
+}
+#endif
