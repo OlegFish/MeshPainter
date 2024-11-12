@@ -2,21 +2,50 @@
 
 #define NUM_THREADS 1
 
+#ifdef __INTELLISENSE__
+#define COMPUTESHADER 1
+#define VERTEXSHADER 1
+#define PIXELSHADER 1
+#endif
+
+// Global Shader
+// - Material Shader
+//   - Mesh material shader
+// - Niagara shader
+
+Texture2D Texture;
+float3 Val;
+float2 HiddenValue;
+
+#if COMPUTESHADER
 [numthreads(NUM_THREADS_X, NUM_THREADS_Y, 1)]
 void ColorFillCS(uint3 ThreadId : SV_DispatchThreadID)
-{
-}
-
-#if VERTEXSHADER
-void ColorFillVS()
 {
 	
 }
 #endif
 
-#if PIXELSHADER
-void ColorFillPS(out float3 Color)
+
+#if VERTEXSHADER
+void ColorFillVS(in float3 InPosition : SV_POSITION, out float4 OutPosition : SV_POSITION, out float A)
 {
-	
+	OutPosition = float4(InPosition, 1.0f);
+}
+#endif
+
+/*
+OutPosition = OutPosition / OutPosition.w;
+OutPosition.xy - effective screen pos
+OutPosition.z  - goes to the depth buffer
+OutPosition.w
+*/
+
+// OUT = IN[0] * Bx + IN[1] * By + IN[2] * Bz
+
+#if PIXELSHADER
+void ColorFillPS(in float3 InPosition : SV_POSITION, in float A, out float3 Color)
+{
+	//Color = float3(1.0f, 0.0f, 0.0f);
+	Color = Val;
 }
 #endif
