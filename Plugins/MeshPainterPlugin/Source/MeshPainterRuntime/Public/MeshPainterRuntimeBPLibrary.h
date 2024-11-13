@@ -11,5 +11,5 @@ class UMeshPainterRuntimeBPLibrary : public UBlueprintFunctionLibrary
 	UFUNCTION(BlueprintCallable, meta = (DisplayName = "Execute Sample function", Keywords = "MeshPainterRuntime sample test testing"), Category = "MeshPainterRuntimeTesting")
 	static float MeshPainterRuntimeSampleFunction(float Param);
 
-	static FVector MakeTestVector(float X, float Y, float Z);
+	//static FVector MakeTestVector(float X, float Y, float Z);
 };
