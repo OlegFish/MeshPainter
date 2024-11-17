@@ -54,3 +54,23 @@ struct FRenderMaterialOnMeshViewConfiguration
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	FMatrix ProjectionMatrix;
 };
+
+UCLASS()
+class MESHPAINTERRUNTIME_API UMeshPainterFunctionLibrary : public UBlueprintFunctionLibrary
+{
+	GENERATED_BODY()
+
+public:
+
+	UFUNCTION(BlueprintCallable, meta = (WorldContext = "WorldContextObject"))
+	static bool RenderMaterialOnMeshUVLayout(
+		UObject* WorldContextObject,
+		UPrimitiveComponent* MeshComponent,
+		UMaterialInterface* Material,
+		UTextureRenderTarget2D* BaseColor,
+		UTextureRenderTarget2D* Emissive,
+		UTextureRenderTarget2D* NormalMap,
+		int32 LOD,
+		bool bClearRenderTargets,
+		ERenderMaterialOnMeshFilter Filter);
+};
