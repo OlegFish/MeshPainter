@@ -73,4 +73,8 @@ public:
 		int32 LOD,
 		bool bClearRenderTargets,
 		ERenderMaterialOnMeshFilter Filter);
+
+	UFUNCTION(BlueprintCallable, meta = (WorldContext = "WorldContextObject"))
+	static void RenderSolidColorShader(UTextureRenderTarget2D* RenderTarget, FColor Color);
+
 };
