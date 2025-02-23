@@ -22,6 +22,36 @@ bool UMeshPainterFunctionLibrary::RenderMaterialOnMeshUVLayout(
 	return 1;
 }
 
+inline FBufferRHIRef CreateTempVertexBuffer(FRHICommandListBase& RHICmdList)
+{
+	FRHIResourceCreateInfo CreateInfo(TEXT("TempMediaVertexBuffer"));
+	/**	Создаем буффер
+	sizeof(FVector4f) так как мы используем GraphicsPSOInit.BoundShaderState.VertexDeclarationRHI = GetVertexDeclarationFVector4();
+	*6 - т.к. используем list, а для strip было бы 4
+	EBufferUsageFlags - флаги, управляющие особенностями буффера
+	CreateInfo - дополнительные опции буффера */
+	FBufferRHIRef VertexBufferRHI = RHICmdList.CreateVertexBuffer(sizeof(FVector4f) * 6, BUF_Volatile, CreateInfo);
+	/**	Блокируем созданный буффер для видеокарты, чтобы в него спокойно писать, для себя разблокируем
+	Offset - сколько от начала буффера пропускаем, 0 значит блокируем от начала
+	SizeRHI - сколько хотим заблокировать байт
+	LockMode - параметры блокировки */
+	void* VoidPtr = RHICmdList.LockBuffer(VertexBufferRHI, 0, sizeof(FVector4f) * 6, RLM_WriteOnly);
+
+	/** Изменяем тип указателя void* на FVector4f* */
+	FVector4f* Vertices = (FVector4f*)VoidPtr;
+	Vertices[0] = FVector4f(-1.0f, -1.0f, 0.0f, 1.0f);
+	Vertices[1] = FVector4f(-1.0f, 1.0f, 0.0f, 1.0f);
+	Vertices[2] = FVector4f(1.0f, -1.0f, 0.0f, 1.0f);
+
+	Vertices[3] = FVector4f(-1.0f, 1.0f, 0.0f, 1.0f);
+	Vertices[4] = FVector4f(1.0f, -1.0f, 0.0f, 1.0f);
+	Vertices[5] = FVector4f(1.0f, 1.0f, 0.0f, 1.0f);
+
+	RHICmdList.UnlockBuffer(VertexBufferRHI);
+
+	return VertexBufferRHI;
+}
+
 void UMeshPainterFunctionLibrary::RenderSolidColorShader(UObject* WorldContextObject, UTextureRenderTarget2D* RenderTarget, FColor Color)
 {
 	if (!IsValid(RenderTarget)) return;
@@ -30,61 +60,79 @@ void UMeshPainterFunctionLibrary::RenderSolidColorShader(UObject* WorldContextOb
 	ERHIFeatureLevel::Type FeatureLevel = World->GetFeatureLevel();
 
 	ENQUEUE_RENDER_COMMAND(RenderSolidColor)([RenderTarget, Color, FeatureLevel](FRHICommandListImmediate& RHICmdList)
-	{		
-		FTextureRenderTargetResource* Resource = RenderTarget->GetRenderTargetResource();
-		if (!Resource) return;
+		{
+			FTextureRenderTargetResource* Resource = RenderTarget->GetRenderTargetResource();
+			if (!Resource) return;
 
-		FTextureRenderTarget2DResource* Resource2D = Resource->GetTextureRenderTarget2DResource();
-		if (!Resource2D) return;
-		RenderCaptureInterface::FScopedCapture RenderCapture(CVarEnableTestProfiling.GetValueOnRenderThread(), &RHICmdList);
+			FTextureRenderTarget2DResource* Resource2D = Resource->GetTextureRenderTarget2DResource();
+			if (!Resource2D) return;
+			RenderCaptureInterface::FScopedCapture RenderCapture(CVarEnableTestProfiling.GetValueOnRenderThread(), &RHICmdList);
 
-		FRHIRenderPassInfo RenderPassInfo;
-		RenderPassInfo.bOcclusionQueries = false;
-		RenderPassInfo.ColorRenderTargets[0].RenderTarget = Resource2D->GetRenderTargetTexture();
-		RenderPassInfo.ColorRenderTargets[0].Action = ERenderTargetActions::Load_Store;
-		RenderPassInfo.ColorRenderTargets[0].MipIndex = 0;
-		RenderPassInfo.ColorRenderTargets[0].ArraySlice = 0;
+			FRHIRenderPassInfo RenderPassInfo;
+			RenderPassInfo.bOcclusionQueries = false;
+			RenderPassInfo.ColorRenderTargets[0].RenderTarget = Resource2D->GetRenderTargetTexture();
+			RenderPassInfo.ColorRenderTargets[0].Action = ERenderTargetActions::Load_Store;
+			RenderPassInfo.ColorRenderTargets[0].MipIndex = 0;
+			RenderPassInfo.ColorRenderTargets[0].ArraySlice = 0;
 
-		RHICmdList.BeginRenderPass(RenderPassInfo, TEXT("RenderSolidColor"));
+			RHICmdList.BeginRenderPass(RenderPassInfo, TEXT("RenderSolidColor"));
 
-		/** Устанавливаем зону в которой рисуем в рендер таргете */
-		RHICmdList.SetViewport(0.0f, 0.0f, 0.0f, Resource2D->GetSizeX(), Resource2D->GetSizeY(), 1.0);
-		
-		FGlobalShaderMap* GlobalShaderMap = GetGlobalShaderMap(FeatureLevel);
-		TShaderMapRef<FSingleColorShaderVS> VertexShader(GlobalShaderMap);
-		TShaderMapRef<FSingleColorShaderPS> PixelShader(GlobalShaderMap);
+			/** Устанавливаем зону в которой рисуем в рендер таргете */
+			RHICmdList.SetViewport(0.0f, 0.0f, 0.0f, Resource2D->GetSizeX(), Resource2D->GetSizeY(), 1.0);
 
-		/** Настраиваем GraphicsPSOInit (Graphics Pipeline state object)
-		Он управляет тем как и что рисовать, указание конкретных шейдеров, настройки рендера и пр. */
-		FGraphicsPipelineStateInitializer GraphicsPSOInit;
-		GraphicsPSOInit.BlendState = TStaticBlendState<>::GetRHI();
-		GraphicsPSOInit.DepthStencilState = TStaticDepthStencilState<false, CF_Always>::GetRHI();
-		GraphicsPSOInit.RasterizerState = TStaticRasterizerState<FM_Solid, CM_None, ERasterizerDepthClipMode::DepthClip, false>::GetRHI();
-		GraphicsPSOInit.PrimitiveType = EPrimitiveType::PT_TriangleList;
+			FGlobalShaderMap* GlobalShaderMap = GetGlobalShaderMap(FeatureLevel);
+			TShaderMapRef<FSingleColorShaderVS> VertexShader(GlobalShaderMap);
+			TShaderMapRef<FSingleColorShaderPS> PixelShader(GlobalShaderMap);
 
-		/** Подключаем шейдера */
-		GraphicsPSOInit.BoundShaderState.VertexShaderRHI = VertexShader.GetVertexShader();
-		GraphicsPSOInit.BoundShaderState.PixelShaderRHI = PixelShader.GetPixelShader();
+			/** Настраиваем GraphicsPSOInit (Graphics Pipeline state object)
+			Он управляет тем как и что рисовать, указание конкретных шейдеров, настройки рендера и пр. */
+			FGraphicsPipelineStateInitializer GraphicsPSOInit;
+			GraphicsPSOInit.BlendState = TStaticBlendState<>::GetRHI();
+			GraphicsPSOInit.DepthStencilState = TStaticDepthStencilState<false, CF_Always>::GetRHI();
+			GraphicsPSOInit.RasterizerState = TStaticRasterizerState<FM_Solid, CM_None, ERasterizerDepthClipMode::DepthClip, false>::GetRHI();
+			GraphicsPSOInit.PrimitiveType = EPrimitiveType::PT_TriangleList;
 
-		/** Устанавливаем Vertex type (структуру вертекса), то что шейдер получает на вход */
-		GraphicsPSOInit.BoundShaderState.VertexDeclarationRHI = GetVertexDeclarationFVector4();
+			/** Подключаем шейдера */
+			GraphicsPSOInit.BoundShaderState.VertexShaderRHI = VertexShader.GetVertexShader();
+			GraphicsPSOInit.BoundShaderState.PixelShaderRHI = PixelShader.GetPixelShader();
 
-		/** Используем заполненный выше GraphicsPSOInit для настройки пайплайна */
-		SetGraphicsPipelineState(RHICmdList, GraphicsPSOInit, 0);
+			/** Устанавливаем Vertex type (структуру вертекса), то что шейдер получает на вход */
+			GraphicsPSOInit.BoundShaderState.VertexDeclarationRHI = GetVertexDeclarationFVector4();
 
-		/** Настраиваем FParameters (параметры шейдеров)
-		можно так, или как ниже FSingleColorShaderVS::FParameters ShaderParameters; */
-		FSingleColorParameters ShaderParameters;
-		ShaderParameters.Color = FVector3f(Color);
-		ShaderParameters.Time = 0.f;
+			/** Используем заполненный выше GraphicsPSOInit для настройки пайплайна */
+			SetGraphicsPipelineState(RHICmdList, GraphicsPSOInit, 0);
 
-		// Останивились на пиксельном шейдере
+			/** Настраиваем FParameters (параметры шейдеров)
+			можно так, или как ниже FSingleColorShaderVS::FParameters ShaderParameters; */
+			FSingleColorParameters ShaderParameters;
+			ShaderParameters.Color = FVector3f(Color);
+			ShaderParameters.Time = 0.f;
 
-		SetShaderParameters(RHICmdList, VertexShader, GraphicsPSOInit.BoundShaderState.VertexShaderRHI, ShaderParameters);
+			/** Устанавливаем параметры для шейдера на комманд листе */
+			SetShaderParameters(RHICmdList, VertexShader, GraphicsPSOInit.BoundShaderState.VertexShaderRHI, ShaderParameters);
+			SetShaderParameters(RHICmdList, PixelShader, GraphicsPSOInit.BoundShaderState.PixelShaderRHI, ShaderParameters);
 
-		RHICmdList.EndRenderPass();
-	
-	});
+			/** Указывает, какой вертекс буфер мы будем использовать для рисования */
+			FBufferRHIRef VertexBuffer = CreateTempVertexBuffer(RHICmdList);
+
+			/** Указали где брать вертексы, параметр Offset начальный отступ */
+			RHICmdList.SetStreamSource(0, VertexBuffer, 0);
+
+			/** DrawPrimitive, команда рисовать - один вызов соответствует одному дроуколу
+			BaseVertexIndex - еще один отступ от начала, отступы суммируются
+			NumPrimitives - кол-во треугольников, которые мы нарисуем за один дроукол
+			NumInstances - кол-во инстансов, которые рисуем
+
+			Индекс буффер выглядит так:
+			[0, 1, 2] первый треугольник
+			[3, 4, 5]
+			...
+			*/
+			RHICmdList.DrawPrimitive(0, 2, 1);
+
+			RHICmdList.EndRenderPass();
+
+		});
 	FlushRenderingCommands();
 	RenderTarget->UpdateResourceImmediate(false);
 }
