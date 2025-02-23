@@ -3,18 +3,23 @@
 #include "CoreMinimal.h"
 #include "ShaderParameterStruct.h"
 
-BEGIN_SHADER_PARAMETER_STRUCT(FSingleColorParameters, )
+/** —оздаем структуру с параметрами дл€ шейдера
+»спользуем здесь макросы, а не код, потомучто UE так надо чтобы состыковать —++ код с шейдерами */
+BEGIN_SHADER_PARAMETER_STRUCT(FSingleColorParameters, MESHPAINTERSHADERCORE_API)
 SHADER_PARAMETER(FVector3f, Color)
 SHADER_PARAMETER(float, Time)
 END_SHADER_PARAMETER_STRUCT()
 
-class FSingleColorShaderVS : public FGlobalShader
+/** —оздаем класс шейдера (shader class), в данном случае вертекс шейдер
+“олько к шейдер классам можно прив€зывать шейдер-файлы (.usf файлы) */
+class MESHPAINTERSHADERCORE_API FSingleColorShaderVS : public FGlobalShader
 {
 	DECLARE_GLOBAL_SHADER(FSingleColorShaderVS);
 	SHADER_USE_PARAMETER_STRUCT(FSingleColorShaderVS, FGlobalShader);
 
+	/** FParameters - тип параметров этого шейдера
+	¬ качестве FParameters используем FSingleColorParameters */
 	using FParameters = FSingleColorParameters;
-	//typedef FSingleColorParameters FParameters;
 
 public:
 	static void ModifyCompilationEnvironment(const FGlobalShaderPermutationParameters& InParameters, FShaderCompilerEnvironment& OutEnvironment)
@@ -24,7 +29,7 @@ public:
 	}
 };
 
-class FSingleColorShaderPS : public FGlobalShader
+class MESHPAINTERSHADERCORE_API FSingleColorShaderPS : public FGlobalShader
 {
 	DECLARE_GLOBAL_SHADER(FSingleColorShaderPS);
 	SHADER_USE_PARAMETER_STRUCT(FSingleColorShaderPS, FGlobalShader);
@@ -40,7 +45,7 @@ public:
 	}
 };
 
-class FSingleColorShaderCS : public FGlobalShader
+class MESHPAINTERSHADERCORE_API FSingleColorShaderCS : public FGlobalShader
 {
 	DECLARE_GLOBAL_SHADER(FSingleColorShaderCS);
 	SHADER_USE_PARAMETER_STRUCT(FSingleColorShaderCS, FGlobalShader);

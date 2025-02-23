@@ -1,3 +1,5 @@
+/** Для использования в блупринтах */
+
 #pragma once
 
 #include "CoreMinimal.h"
@@ -74,7 +76,7 @@ public:
 		bool bClearRenderTargets,
 		ERenderMaterialOnMeshFilter Filter);
 
+	// Paints with single solid color
 	UFUNCTION(BlueprintCallable, meta = (WorldContext = "WorldContextObject"))
-	static void RenderSolidColorShader(UTextureRenderTarget2D* RenderTarget, FColor Color);
-
+	static void RenderSolidColorShader(UObject* WorldContextObject, UTextureRenderTarget2D* RenderTarget, FColor Color);
 };

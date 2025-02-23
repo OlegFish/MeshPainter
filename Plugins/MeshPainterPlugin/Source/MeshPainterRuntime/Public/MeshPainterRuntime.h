@@ -1,3 +1,5 @@
+/** ”правление самим модулем, загрузка, выгрузка */
+
 #pragma once
 
 #include "Modules/ModuleManager.h"

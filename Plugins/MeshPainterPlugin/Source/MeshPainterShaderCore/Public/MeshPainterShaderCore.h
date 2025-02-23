@@ -1,3 +1,5 @@
+/** Модуль с шейдерами */
+
 #pragma once
 
 #include "Modules/ModuleManager.h"
