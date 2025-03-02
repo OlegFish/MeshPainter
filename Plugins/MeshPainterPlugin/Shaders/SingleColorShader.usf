@@ -19,16 +19,18 @@ void ColorFillCS(uint3 ThreadId : SV_DispatchThreadID)
 #endif
 
 #if VERTEXSHADER
-void ColorFillVS(in float3 InPosition : SV_POSITION, out float4 OutPosition : SV_POSITION, out float A : TEXCOORD0)
+void ColorFillVS(in float2 InPosition : ATTRIBUTE0, in float2 InTexcoord : ATTRIBUTE1, out float4 OutPosition : SV_POSITION, out half2 OutTexcoord : TEXCOORD0)
 {
-	OutPosition = float4(InPosition, 1.0f);
+	OutPosition.xy = InPosition.xy;
+	OutPosition.zw = float2(0.0f, 1.0f);
+	OutTexcoord = InTexcoord;
 }
 #endif
 
 #if PIXELSHADER
-void ColorFillPS(in float4 InPosition : SV_POSITION, in float A : TEXCOORD0, out float3 OutColor : SV_Target0)
+half4 ColorFillPS(in float4 InPosition : SV_POSITION, in half2 InTexcoord : TEXCOORD0) : SV_Target0
 {
 	//Color = float3(1.0f, 0.0f, 0.0f);
-    OutColor = 0.5;
+	return half4(InTexcoord.x, InTexcoord.y, 0.0, 1.0);
 }
 #endif

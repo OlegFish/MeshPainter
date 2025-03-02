@@ -2,26 +2,27 @@
 
 #include "CoreMinimal.h"
 #include "ShaderParameterStruct.h"
+#include "DataDrivenShaderPlatformInfo.h"
 
-/** —оздаем структуру с параметрами дл€ шейдера
-»спользуем здесь макросы, а не код, потомучто UE так надо чтобы состыковать —++ код с шейдерами */
 BEGIN_SHADER_PARAMETER_STRUCT(FSingleColorParameters, MESHPAINTERSHADERCORE_API)
 SHADER_PARAMETER(FVector3f, Color)
 SHADER_PARAMETER(float, Time)
 END_SHADER_PARAMETER_STRUCT()
 
-/** —оздаем класс шейдера (shader class), в данном случае вертекс шейдер
-“олько к шейдер классам можно прив€зывать шейдер-файлы (.usf файлы) */
-class MESHPAINTERSHADERCORE_API FSingleColorShaderVS : public FGlobalShader
+class FSingleColorShaderVS : public FGlobalShader
 {
-	DECLARE_GLOBAL_SHADER(FSingleColorShaderVS);
+	DECLARE_EXPORTED_GLOBAL_SHADER(FSingleColorShaderVS, MESHPAINTERSHADERCORE_API);
 	SHADER_USE_PARAMETER_STRUCT(FSingleColorShaderVS, FGlobalShader);
 
-	/** FParameters - тип параметров этого шейдера
-	¬ качестве FParameters используем FSingleColorParameters */
 	using FParameters = FSingleColorParameters;
 
 public:
+	// Called by the engine to determine which permutations to compile for this shader
+	static bool ShouldCompilePermutation(const FGlobalShaderPermutationParameters& Parameters)
+	{
+		return true;
+	}
+	
 	static void ModifyCompilationEnvironment(const FGlobalShaderPermutationParameters& InParameters, FShaderCompilerEnvironment& OutEnvironment)
 	{
 		FGlobalShader::ModifyCompilationEnvironment(InParameters, OutEnvironment);
@@ -29,15 +30,21 @@ public:
 	}
 };
 
-class MESHPAINTERSHADERCORE_API FSingleColorShaderPS : public FGlobalShader
+class FSingleColorShaderPS : public FGlobalShader
 {
-	DECLARE_GLOBAL_SHADER(FSingleColorShaderPS);
+	DECLARE_EXPORTED_GLOBAL_SHADER(FSingleColorShaderPS, MESHPAINTERSHADERCORE_API);
 	SHADER_USE_PARAMETER_STRUCT(FSingleColorShaderPS, FGlobalShader);
 
 	using FParameters = FSingleColorParameters;
 	//typedef FSingleColorParameters FParameters;
 
 public:
+	// Called by the engine to determine which permutations to compile for this shader
+	static bool ShouldCompilePermutation(const FGlobalShaderPermutationParameters& Parameters)
+	{
+		return true;
+	}
+
 	static void ModifyCompilationEnvironment(const FGlobalShaderPermutationParameters& InParameters, FShaderCompilerEnvironment& OutEnvironment)
 	{
 		FGlobalShader::ModifyCompilationEnvironment(InParameters, OutEnvironment);
@@ -45,9 +52,9 @@ public:
 	}
 };
 
-class MESHPAINTERSHADERCORE_API FSingleColorShaderCS : public FGlobalShader
+class FSingleColorShaderCS : public FGlobalShader
 {
-	DECLARE_GLOBAL_SHADER(FSingleColorShaderCS);
+	DECLARE_EXPORTED_GLOBAL_SHADER(FSingleColorShaderCS, MESHPAINTERSHADERCORE_API);
 	SHADER_USE_PARAMETER_STRUCT(FSingleColorShaderCS, FGlobalShader);
 
 	using FParameters = FSingleColorParameters;

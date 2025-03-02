@@ -18,12 +18,12 @@
 		{
 			"Name": "MeshPainterShaderCore",
 			"Type": "Runtime",
-			"LoadingPhase": "EarliestPossible"
+			"LoadingPhase": "PostConfigInit"
 		},
 		{
 			"Name": "MeshPainterRuntime",
 			"Type": "Runtime",
-			"LoadingPhase": "PreLoadingScreen"
+			"LoadingPhase": "Default"
 		}
 	]
 }
